@@ -20,5 +20,9 @@
     "require-directory": "^2.1.1",
     "sequelize": "^5.21.9",
     "validator": "^13.0.0"
+  },
+  "scripts": {
+    "start:dev": "nodemon app.js",
+    "start:prod": "node app.js"
   }
 }
