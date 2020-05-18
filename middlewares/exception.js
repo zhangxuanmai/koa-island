@@ -1,19 +1,31 @@
-const { HttpException } = require('../utils/http-exception')
+const { HttpException } = require('../core/http-exception')
 
 const catchError = async (ctx, next) => {
   try {
     await next()
   } catch (error) {
-    if (error instanceof HttpException) {
-      ctx.status = error.statusCode
-      ctx.body = {
-        request: `${ctx.method} ${ctx.path}`,
-        error_code: error.errorCode,
-        message: error.message,
-      }
-      return
+    const isHttpException = error instanceof HttpException
+    const isDev = global.config.env === 'dev'
+
+    if (isDev && !isHttpException) {
+      throw error
     }
-    ctx.body = '服务器发生问题，请稍后再尝试！'
+
+    if (isHttpException) {
+      ctx.body = {
+        msg: error.msg,
+        error_code: error.errorCode,
+        request: `${ctx.method} ${ctx.path}`
+      }
+      ctx.status = error.code
+    } else {
+      ctx.body = {
+        msg: 'server error',
+        error_code: 999,
+        request: `${ctx.method} ${ctx.path}`
+      }
+      ctx.status = 500
+    }
   }
 }
 
