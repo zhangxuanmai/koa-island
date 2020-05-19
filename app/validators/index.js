@@ -1,5 +1,6 @@
 const { LinValidator, Rule } = require('../../core/lin-validator')
 const { User } = require('../models/user')
+const { LoginType, LoginTypeMap } = require('../lib/enum')
 
 class PositiveIntegerValidator extends LinValidator {
   constructor() {
@@ -73,10 +74,33 @@ class TokenValidator extends LinValidator {
       })
     ]
   }
+
+  validateLoginType(values) {
+    const type = values.body.type
+
+    if (!type) {
+      throw new Error('type参数不得为空')
+    }
+    if (!LoginTypeMap.has(type)) {
+      throw new Error('type参数不合法')
+    }
+  }
+}
+
+class NotEmptyValidator extends LinValidator {
+  constructor() {
+    super()
+    this.token = [
+      new Rule('isLength', '不允许为空', {
+        min: 1,
+      })
+    ]
+  }
 }
 
 module.exports = {
   PositiveIntegerValidator,
   RegisterValidator,
   TokenValidator,
+  NotEmptyValidator,
 }
