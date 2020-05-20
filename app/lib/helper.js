@@ -1,9 +1,7 @@
-const { SuccessException } = require('../../core/http-exception')
-
-function success(msg, errorCode) {
-  throw new SuccessException(msg, errorCode)
+const success = (msg, errorCode) => {
+  throw new global.errs.Success(msg, errorCode)
 }
 
 module.exports = {
   success
-};
+}

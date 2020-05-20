@@ -1,8 +1,10 @@
 const Router = require('koa-router')
 
-const { User } = require('../../models/user')
-const { RegisterValidator } = require('../../validators')
-const { success } = require('../../lib/helper')
+const { User } = require('@model/user')
+
+const { success } = require('@lib/helper')
+
+const { RegisterValidator } = require('@validator')
 
 const router = new Router({
   prefix: '/v1/user'
@@ -11,11 +13,13 @@ const router = new Router({
 router.post('/register', async (ctx, next) => {
   const v = await new RegisterValidator().validate(ctx)
   const user = {
-    email: v.get('body.eamil'),
+    email: v.get('body.email'),
     password: v.get('body.password2'),
-    nickname: v.get('body.nickname'),
+    nickname: v.get('body.nickname')
   }
-  await User.create(user)
+
+  User.create(user)
+
   success()
 })
 

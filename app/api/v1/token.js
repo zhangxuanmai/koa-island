@@ -1,11 +1,26 @@
 const Router = require('koa-router')
-const { TokenValidator, NotEmptyValidator } = require('../../validators')
-const { LoginType } = require('../../lib/enum')
-const { User } = require('../../models/user')
-const { ParameterException } = require('../../../core/http-exception')
-const { generateToken } = require('../../../core/util')
-const { Auth } = require('../../../middlewares/auth')
-const { WechatManager } = require('../../services/wx')
+const {
+  success
+} = require('@lib/helper')
+const {
+  TokenValidator,
+  NotEmptyValidate
+} = require('@validator')
+const {
+  LoginType
+} = require('@lib/enum')
+const {
+  User
+} = require('@model/user')
+const {
+  generateToken
+} = require('@core/util')
+const {
+  Auth
+} = require('@middlewares/auth')
+const {
+  WXManager
+} = require('@services/wx')
 
 const router = new Router({
   prefix: '/v1/token'
@@ -13,40 +28,36 @@ const router = new Router({
 
 router.post('/', async (ctx, next) => {
   const v = await new TokenValidator().validate(ctx)
-  const type = v.get('body.type')
-
-  let token;
-  switch (type) {
+  let token
+  switch (v.get('body.type')) {
     case LoginType.USER_EMAIL:
-      const account = v.get('body.account')
-      const secret = v.get('body.secret')
-      token = await eamilLogin(account, secret)
-      break;
-
-    case LoginType.USER_MINI_PROGRAN:
-      token = await WechatManager.codeToToken(v.get('body.account'))
-      break;
-
+      token = await emailLogin(v.get('body.account'), v.get('body.secret'))
+      break
+    case LoginType.USER_MINI_PROGRAM:
+      token = await WXManager.codeToToken(v.get('body.account'))
+      break
+    case LoginType.ADMIN_EMAIL:
+      break
     default:
-      throw new ParameterException('没有相应处理方式')
+      throw new global.errs.ParameterException('没有相应的处理函数')
   }
-
   ctx.body = {
     token
   }
 })
 
-router.post('/verify', async (ctx, next) => {
-  const v = await new NotEmptyValidator().validate(ctx)
+router.post('/verify', async (ctx) => {
+  // token
+  const v = await new NotEmptyValidate().validate(ctx)
   const result = Auth.verifyToken(v.get('body.token'))
   ctx.body = {
-    result
+    isValid: result
   }
 })
 
-async function eamilLogin(account, secret) {
-  const user = await User.verifyEamilPassword(account, secret)
-  return generateToken(user.id, Auth.USER)
+const emailLogin = async (account, secret) => {
+  const user = await User.verifyEmailPassword(account, secret)
+  return token = generateToken(user.id, Auth.USER)
 }
 
 module.exports = router

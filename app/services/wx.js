@@ -1,41 +1,31 @@
 const util = require('util')
 const axios = require('axios')
-const { AuthFailed } = require('../../core/http-exception')
-const { User } = require('../models/user')
-const { generateToken } = require('../../core/util')
-const { Auth } = require('../../middlewares/auth')
+const { User } = require('@model/user')
+const { generateToken } = require('@core/util')
+const { Auth } = require('@middlewares/auth')
 
-class WechatManager {
+class WXManager {
   static async codeToToken(code) {
-    const url = util.format(
-      global.config.wx.loginUrl,
-      global.config.wx.appID,
-      global.config.wx.appSecret,
-      code
-    )
-
+    const url = util.format(global.config.wx.loginUrl, global.config.wx.appId, global.config.wx.appSecret, code)
     const result = await axios.get(url)
-    const errcode = result.data.errcode
-    const errmsg = result.data.errmsg
 
     if (result.status !== 200) {
-      throw new AuthFailed('oppid获取失败')
+      throw new global.errs.AuthFailed('openid获取失败')
     }
-
+    const errcode = result.data.errcode
+    const errmsg = result.data.errmsg
     if (errcode) {
-      throw new AuthFailed(`${errcode}:${errmsg}`)
+      throw new global.errs.AuthFailed('openid获取失败:' + errmsg)
     }
 
-    const openid = result.data.openid
-    let user = await User.getUserByOpenid(openid)
+    let user = await User.getUserByOpenid(result.data.openid)
     if (!user) {
-      user = await User.registerByOpenid(openid)
+      user = await User.registerByOpenid(result.data.openid)
     }
-
     return generateToken(user.id, Auth.USER)
   }
 }
 
 module.exports = {
-  WechatManager
-};
+  WXManager
+}

@@ -1,15 +1,17 @@
+require('module-alias/register')
+
 const Koa = require('koa')
-const parser = require('koa-bodyparser')
-const initManger = require('./core/init')
-const catchError = require('./middlewares/exception')
+const InitManager = require('@core/init')
+const bodyParser = require('koa-bodyparser')
+const catchError = require('@middlewares/exception')
+const path = require('path')
+const static = require('koa-static')
 
 const app = new Koa()
-
-// catch error message
 app.use(catchError)
-// parser body
-app.use(parser())
-// init routers
-initManger.initCore(app)
+app.use(bodyParser())
+app.use(static(path.join(__dirname, './static')))
 
-app.listen(9000)
+InitManager.initCore(app)
+
+app.listen(3001)
